@@ -1,0 +1,42 @@
+# Runs the load generator once inside the cluster.
+#   kubectl apply -f loadgen-job.yaml
+#   kubectl logs -f job/loadgen
+# The summary with p50, p95 and error rate per phase is printed at the end of the log.
+# To run it again: kubectl delete job loadgen, then apply the file again.
+#
+# Phases: idle = one search every IDLE_INTERVAL_S seconds; peak = PEAK_USERS users who each search,
+# read the results for about PEAK_THINK_S seconds and search again. The users join over the first
+# PEAK_RAMP_S seconds of the peak. With the defaults the peak is about 4 to 5 searches per second.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: loadgen
+spec:
+  backoffLimit: 0
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: loadgen
+        image: ghcr.io/02zetdan/pa1488-loadgen:1.0
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: TARGET_URL
+          value: "http://qfapp-service:3000"   # change to the name and port of your QFApp Service
+        - name: TRANSPORTS
+          value: "polling,websocket"   # like a browser: starts with HTTP long-polling, then upgrades.
+                                       # Must match the transports your QFApp browser client uses ("polling", "websocket" or both).
+        - name: PHASES
+          value: "idle,peak"           # or only one of them, e.g. "peak"
+        - name: IDLE_INTERVAL_S
+          value: "10"
+        - name: IDLE_DURATION_S
+          value: "300"
+        - name: PEAK_USERS
+          value: "100"
+        - name: PEAK_THINK_S
+          value: "20"
+        - name: PEAK_RAMP_S
+          value: "120"
+        - name: PEAK_DURATION_S
+          value: "300"

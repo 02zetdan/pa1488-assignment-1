@@ -1,0 +1,41 @@
+services:
+  app:
+    build: ./QFApp
+    image: qfapp
+    ports:
+      - 8080:3000
+    environment:
+      REDIS_HOST: messagequeue
+      TEXTSTORE_HOST: textstore
+
+  worker:
+    build: ./QFWorker
+    image: qfworker
+    deploy:
+      replicas: 1
+    environment:
+      REDIS_HOST: messagequeue
+      TEXTSTORE_HOST: textstore
+
+  messagequeue:
+    image: redis:8-alpine
+    command: redis-server
+    expose:
+      - "6379"
+    volumes:
+      - redis-data:/data
+
+  textstore:
+    image: mongo:8
+    restart: always
+    command: --quiet
+    expose:
+      - "27017"
+    volumes:
+      - textstore-data:/data/db
+      - mongo-config:/data/configdb
+
+volumes:
+  redis-data:
+  textstore-data:
+  mongo-config:

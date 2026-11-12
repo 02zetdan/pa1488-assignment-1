@@ -1,0 +1,27 @@
+{
+  "name": "qfworker",
+  "version": "1.0.0",
+  "description": "backend worker for QuoteFinder app",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js"
+  },
+  "author": "Mikael Svahnberg",
+  "license": "MIT",
+  "dependencies": {
+    "mongoose": "^9.12.1",
+    "rsmq": "^0.13.0",
+    "rsmq-promise-native": "^0.0.4",
+    "rsmq-worker": "^0.5.2"
+  },
+  "overrides": {
+    "rsmq-worker": {
+      "async": "^2.6.4",
+      "rsmq": "^0.13.0"
+    },
+    "rsmq-promise-native": {
+      "rsmq": "^0.13.0"
+    }
+  }
+}

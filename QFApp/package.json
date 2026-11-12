@@ -1,0 +1,30 @@
+{
+  "name": "qfapp",
+  "version": "1.0.0",
+  "description": "Frontend for QuoteFinder app",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js"
+  },
+  "author": "Mikael Svahnberg",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^5.3.0",
+    "mongoose": "^9.12.1",
+    "pug": "^3.0.4",
+    "rsmq": "^0.13.0",
+    "rsmq-promise-native": "^0.0.4",
+    "rsmq-worker": "^0.5.2",
+    "socket.io": "^4.8.4"
+  },
+  "overrides": {
+    "rsmq-worker": {
+      "async": "^2.6.4",
+      "rsmq": "^0.13.0"
+    },
+    "rsmq-promise-native": {
+      "rsmq": "^0.13.0"
+    }
+  }
+}
