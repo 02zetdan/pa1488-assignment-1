@@ -25,6 +25,13 @@ Write-Host "Found docker, minikube, kubectl and Python: $($py -join ' ')"
 
 minikube start --cpus=4 --memory=6g --cni=calico
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+# Without working DNS in the node, no image can be pulled and the cluster never becomes ready.
+docker exec minikube getent hosts registry.k8s.io | Out-Null
+if ($LASTEXITCODE -ne 0) {
+    Write-Error "The minikube node cannot resolve host names, so it cannot pull images. Apply the fix under 'If images cannot be pulled' in README.md, then run this script again."
+    exit 1
+}
 minikube addons enable metrics-server
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
@@ -37,6 +44,11 @@ if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 kubectl -n kube-system rollout status deploy/metrics-server --timeout=180s
 
 Write-Host "Waiting for the system pods to become ready..."
-kubectl wait --for=condition=Ready pods --all -n kube-system --timeout=300s
+# Wait for the controllers, not for individual pods: pods may be replaced while we wait.
+kubectl -n kube-system wait --for=condition=Available deploy --all --timeout=300s
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+foreach ($ds in (kubectl -n kube-system get ds -o name)) {
+    kubectl -n kube-system rollout status $ds --timeout=300s
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+}
 kubectl get nodes -o wide

@@ -34,7 +34,7 @@ Never commit Secret files with real passwords (see `k8s/README.md`).
    ./setup-minikube.sh            # Linux and macOS
    .\setup-minikube.ps1           # Windows, in PowerShell
    ```
-   The script first checks that the prerequisites are installed.
+   The script first checks that the prerequisites are installed. If it stops because the node "cannot resolve host names", apply the fix under "If images cannot be pulled" below and run it again. Running it again is safe.
 3. Check that the metrics server works. This can take a minute or two after the cluster has started:
    ```
    kubectl top pods -A
@@ -42,10 +42,9 @@ Never commit Secret files with real passwords (see `k8s/README.md`).
    You should see CPU and memory numbers, not an error.
 4. Check that the cluster can pull the assignment's images:
    ```
-   minikube image pull ghcr.io/02zetdan/pa1488-loadgen:1.0
-   minikube image ls | grep pa1488
+   minikube ssh -- sudo crictl pull ghcr.io/02zetdan/pa1488-loadgen:1.0
    ```
-   If the pull fails, see "If images cannot be pulled" below.
+   It should end with `Image is up to date for sha256:…`. If it says it cannot resolve a host name, see "If images cannot be pulled" below. `403 Forbidden` means the image is missing or not public; tell the teachers.
 5. Go to ticket 1 in `TICKETS.md`.
 
 ### Where things are
@@ -117,7 +116,7 @@ A Service of type `NodePort` is reachable on the node's IP address. How you get 
 If pods stay in `ImagePullBackOff` and the events say that a host name cannot be resolved, the minikube node has no working DNS. Check with:
 
 ```
-docker exec minikube getent hosts ghcr.io registry-1.docker.io
+docker exec minikube getent hosts registry.k8s.io ghcr.io registry-1.docker.io
 ```
 
 This depends on your network and on your Docker configuration. It happens, for example, when the Docker daemon is configured with `"dns": ["172.17.0.1"]`, and it may work on one network and fail on another. The fix is to give the node public name servers, then wait a few minutes:
